@@ -1,23 +1,28 @@
 # Work-Log
 
-A personal work tracking application built to log daily activities and progress.
+A personal productivity dashboard to track daily research activities and visualize progress.
 
-## Tech Stack
-* **Frontend:** React (Vite)
-* **Styling:** Tailwind CSS, Lucide React
-* **Visualization:** Recharts
-* **Utilities:** Local Storage for data persistence
-
-## Project Structure
-The repository is organized as follows:
-* `/work-tracker`: The main React application source code.
-* `/setup.sh`: Configuration scripts.
-
-## 🚀 How to Run Locally
-
-Since the application logic resides in the `work-tracker` subdirectory, you must navigate there after cloning.
+## Installation & Setup
 
 ### 1. Clone the repository
 ```bash
 git clone [https://github.com/mathrulestheworld/Work-Log.git](https://github.com/mathrulestheworld/Work-Log.git)
 cd Work-Log
+```
+
+### 2. Navigate to the app directory
+The application code is located in the `work-tracker` folder.
+```bash
+cd work-tracker
+```
+
+### 3. Install Dependencies
+```bash
+npm install
+```
+
+### 4. Run the App
+```bash
+npm run dev
+```
+Open your browser to `http://localhost:5173`.
