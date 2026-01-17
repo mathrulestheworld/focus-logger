@@ -25,7 +25,7 @@ Tailwind, and Electron.
 We have included a script to handle everything for you.
 
 1. **Clone the repo**
-   git clone https://github.com/mathrulestheworld/Work-Log.git
+   git clone https://github.com/mathrulestheworld/focus-logger.git
    cd focus-logger
 
 2. **Run the Magic Script**
