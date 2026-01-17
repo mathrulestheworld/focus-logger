@@ -62,4 +62,4 @@ If you prefer using standard npm commands without the script:
 
 Your work logs are stored locally on your machine.
 
-- **Mac:** ~/Library/Application Support/Focus Logger/
+- **Mac:** ~/Library/Application Support/focus-logger/
