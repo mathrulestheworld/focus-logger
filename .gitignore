@@ -1,4 +1,19 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Dependency directories
 node_modules/
-**/node_modules/
-.DS_Store
+
+# Build outputs
 dist/
+dist-electron/
+
+# OS metadata
+.DS_Store
+Thumbs.db
+
+# Environment variables
+.env
+.env.local
