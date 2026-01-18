@@ -44,20 +44,29 @@ const App = () => {
     savePrefs(newPrefs);
   };
 
-  // --- TIMER ---
+// --- TIMER (Drift-Proof) ---
   useEffect(() => {
     let interval = null;
     if (isRunning) {
+      // Anchor: When did we start this segment?
+      // (Current Time - Seconds already elapsed)
+      const startTime = Date.now() - (seconds * 1000);
+
       interval = setInterval(() => {
-        setSeconds(s => {
-          const next = s + 1;
-          if (goalMinutes > 0 && next === goalMinutes * 60) triggerAlarm();
-          return next;
-        });
+        const now = Date.now();
+        // Calculate exact difference
+        const elapsed = Math.floor((now - startTime) / 1000);
+        
+        setSeconds(elapsed);
+        
+        if (goalMinutes > 0 && elapsed >= goalMinutes * 60) {
+           // Ensure we don't re-trigger if already reached
+           if (!isGoalReached) triggerAlarm();
+        }
       }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isRunning, goalMinutes]);
+  }, [isRunning, goalMinutes]); // 'seconds' removed from dependency to prevent loop
 
   // --- AUDIO ENGINE ---
   const initAudio = () => {
@@ -127,9 +136,27 @@ const App = () => {
   
   const handleStop = () => {
     playUISound('stop');
-    setIsRunning(false); setIsGoalReached(false);
-    saveSession({ taskName: taskName || 'Untitled Task', tag: activeTag, duration: seconds, goalDuration: goalMinutes * 60 });
-    setSeconds(0); setTaskName('');
+    setIsRunning(false); 
+    setIsGoalReached(false);
+    
+    // Calculate precise timestamps
+    const now = new Date();
+    const endTime = now.toISOString();
+    const startTime = new Date(now.getTime() - (seconds * 1000)).toISOString();
+
+    if (seconds > 0) {
+        saveSession({ 
+          taskName: taskName || 'Untitled Task', 
+          tag: activeTag, 
+          duration: seconds, 
+          goalDuration: goalMinutes * 60,
+          startTime,
+          endTime
+        });
+    }
+    
+    setSeconds(0); 
+    setTaskName('');
   };
   
   const handleExtend = () => { setGoalMinutes(prev => prev + 10); setIsGoalReached(false); setIsRunning(true); };

@@ -3,8 +3,8 @@ import { startOfDay, isAfter, addDays } from 'date-fns';
 const STORAGE_KEY = 'focus_logger_sessions';
 const TAGS_KEY = 'focus_logger_tags';
 const PREFS_KEY = 'focus_logger_prefs';
-const TASKS_KEY = 'focus_logger_tasks';     // Simple Tasks
-const PROJECTS_KEY = 'focus_logger_projects'; // Complex Tasks
+const TASKS_KEY = 'focus_logger_tasks';
+const PROJECTS_KEY = 'focus_logger_projects';
 
 // --- HELPERS ---
 const getJSON = (key) => {
@@ -13,27 +13,54 @@ const getJSON = (key) => {
 };
 const saveJSON = (key, data) => localStorage.setItem(key, JSON.stringify(data));
 
+// --- MIGRATION (Fix Old Data) ---
+export const migrateData = () => {
+  const sessions = getJSON(STORAGE_KEY);
+  let hasChanges = false;
+
+  const updated = sessions.map(session => {
+    // If it has a timestamp but NO startTime, it's an old entry
+    if (session.timestamp && !session.startTime) {
+      hasChanges = true;
+      const endTime = new Date(session.timestamp);
+      // Calculate start time based on duration (duration is in seconds)
+      const startTime = new Date(endTime.getTime() - (session.duration * 1000));
+      
+      return {
+        ...session,
+        endTime: session.timestamp, // Old timestamp was effectively the end time
+        startTime: startTime.toISOString()
+      };
+    }
+    return session;
+  });
+
+  if (hasChanges) {
+    console.log("Migrated data to Start-End format");
+    saveJSON(STORAGE_KEY, updated);
+  }
+};
+
 // --- HISTORY ---
 export const getHistory = () => {
-  try {
-    const data = localStorage.getItem(STORAGE_KEY);
-    return data ? JSON.parse(data) : [];
-  } catch (e) { return []; }
+  migrateData(); // Ensure migration runs on fetch
+  return getJSON(STORAGE_KEY);
 };
 
 export const saveSession = (session) => {
-  try {
-    const history = getHistory();
-    const newSession = {
-      id: Date.now(),
-      timestamp: new Date().toISOString(),
-      note: '',
-      ...session
-    };
-    const updated = [newSession, ...history];
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
-    return updated;
-  } catch (e) { return []; }
+  const history = getHistory();
+  
+  // Logic: Use provided Start/End, or calculate them if missing (defaults to Now)
+  const newSession = {
+    id: Date.now(),
+    startTime: session.startTime || new Date(Date.now() - (session.duration * 1000)).toISOString(),
+    endTime: session.endTime || new Date().toISOString(),
+    ...session
+  };
+
+  const updated = [newSession, ...history];
+  saveJSON(STORAGE_KEY, updated);
+  return updated;
 };
 
 export const updateSession = (updatedSession) => {
@@ -41,145 +68,68 @@ export const updateSession = (updatedSession) => {
   const index = history.findIndex(s => s.id === updatedSession.id);
   if (index !== -1) {
     history[index] = updatedSession;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(history));
+    saveJSON(STORAGE_KEY, history);
   }
   return history;
 };
 
 export const deleteSession = (id) => {
-  const history = getHistory();
-  const updated = history.filter(s => s.id !== id);
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
+  const updated = getHistory().filter(s => s.id !== id);
+  saveJSON(STORAGE_KEY, updated);
   return updated;
 };
 
 // --- TAGS & PREFS ---
-export const getSavedTags = () => {
-  try {
-    const data = localStorage.getItem(TAGS_KEY);
-    return data ? JSON.parse(data) : null;
-  } catch (e) { return null; }
-};
-
-export const saveTags = (tags) => {
-  localStorage.setItem(TAGS_KEY, JSON.stringify(tags));
-};
-
-export const getPrefs = () => {
-  try {
-    const data = localStorage.getItem(PREFS_KEY);
-    return data ? JSON.parse(data) : {};
-  } catch (e) { return {}; }
-};
-
+export const getSavedTags = () => getJSON(TAGS_KEY);
+export const saveTags = (tags) => saveJSON(TAGS_KEY, tags);
+export const getPrefs = () => getJSON(PREFS_KEY);
 export const savePrefs = (prefs) => {
-  // Merge with existing to avoid data loss
   const current = getPrefs();
-  localStorage.setItem(PREFS_KEY, JSON.stringify({ ...current, ...prefs }));
+  saveJSON(PREFS_KEY, { ...current, ...prefs });
 };  
 
-// --- NEW: PROJECT (Complex Task) OPERATIONS ---
+// --- PROJECTS ---
 export const getProjects = () => getJSON(PROJECTS_KEY);
-
 export const saveProject = (project) => {
   const projects = getProjects();
-  // If ID exists, update; else add
   const index = projects.findIndex(p => p.id === project.id);
-  let updated;
-  if (index !== -1) {
-    projects[index] = { ...projects[index], ...project };
-    updated = projects;
-  } else {
-    updated = [{ id: Date.now(), title: '', note: '', ...project }, ...projects];
-  }
+  const updated = index !== -1 
+    ? projects.map(p => p.id === project.id ? { ...p, ...project } : p)
+    : [{ id: Date.now(), title: '', note: '', ...project }, ...projects];
   saveJSON(PROJECTS_KEY, updated);
   return updated;
 };
-
 export const deleteProject = (id) => {
-  // When deleting a project, we should probably delete (or orphan) its tasks. 
-  // For safety, let's just orphan them (remove projectId).
   const tasks = getTasks();
-  const updatedTasks = tasks.map(t => t.projectId === id ? { ...t, projectId: null } : t);
-  saveJSON(TASKS_KEY, updatedTasks);
-
-  const projects = getProjects().filter(p => p.id !== id);
-  saveJSON(PROJECTS_KEY, projects);
-  return projects;
+  saveJSON(TASKS_KEY, tasks.map(t => t.projectId === id ? { ...t, projectId: null } : t));
+  saveJSON(PROJECTS_KEY, getProjects().filter(p => p.id !== id));
 };
 
-// --- NEW: TASK (Simple Task) OPERATIONS ---
+// --- TASKS ---
 export const getTasks = () => getJSON(TASKS_KEY);
-
 export const saveTask = (task) => {
   const tasks = getTasks();
   const index = tasks.findIndex(t => t.id === task.id);
-  let updated;
-  
-  if (index !== -1) {
-    tasks[index] = { ...tasks[index], ...task };
-    updated = tasks;
-  } else {
-    // New Task Default State
-    const newTask = {
-      id: Date.now(),
-      createdAt: new Date().toISOString(),
-      title: '',
-      note: '',
-      priority: 3, // Default to High/Normal (3)
-      deadline: '',
-      tag: 'Deep Work',
-      projectId: null, // Link to Complex Task
-      completed: false,
-      deferredUntil: null, // ISO Date string
-      ...task
-    };
-    updated = [newTask, ...tasks];
-  }
+  const updated = index !== -1 
+    ? tasks.map(t => t.id === task.id ? { ...t, ...task } : t)
+    : [{
+        id: Date.now(),
+        createdAt: new Date().toISOString(),
+        title: '', note: '', priority: 3, deadline: '', 
+        tag: 'Deep Work', projectId: null, completed: false, 
+        deferredUntil: null, ...task
+      }, ...tasks];
   saveJSON(TASKS_KEY, updated);
   return updated;
 };
-
-export const deleteTask = (id) => {
-  const updated = getTasks().filter(t => t.id !== id);
-  saveJSON(TASKS_KEY, updated);
-  return updated;
-};
-
+export const deleteTask = (id) => saveJSON(TASKS_KEY, getTasks().filter(t => t.id !== id));
 export const toggleDeferTask = (task) => {
-  // If currently deferred, undefer it. 
-  // If active, defer until TOMORROW start of day.
   const isDeferred = task.deferredUntil && isAfter(new Date(task.deferredUntil), new Date());
-  
-  let newDate = null;
-  if (!isDeferred) {
-    newDate = startOfDay(addDays(new Date(), 1)).toISOString();
-  }
-  
-  return saveTask({ ...task, deferredUntil: newDate });
+  return saveTask({ ...task, deferredUntil: !isDeferred ? startOfDay(addDays(new Date(), 1)).toISOString() : null });
 };
-
-// --- AGGREGATOR ---
-// This function prepares the "Action Items" list for the UI
 export const getActionItems = () => {
-  const tasks = getTasks();
-  const projects = getProjects();
-  const today = new Date();
-
-  // 1. Filter Active & Non-Deferred
-  const active = tasks.filter(t => {
-    if (t.completed) return false;
-    if (t.deferredUntil && isAfter(new Date(t.deferredUntil), today)) return false;
-    return true;
-  });
-
-  // 2. Attach Project Names for display
-  const enriched = active.map(t => {
-    const proj = projects.find(p => p.id === t.projectId);
-    return { ...t, projectName: proj ? proj.title : null };
-  });
-
-  // 3. Sort by Priority (Descending: 5 -> 1)
-  // Note: We can add a 'manualOrder' field later for drag-and-drop override
-  return enriched.sort((a, b) => b.priority - a.priority);
+  const tasks = getTasks(); const projects = getProjects(); const today = new Date();
+  return tasks.filter(t => !t.completed && (!t.deferredUntil || !isAfter(new Date(t.deferredUntil), today)))
+    .map(t => ({ ...t, projectName: projects.find(p => p.id === t.projectId)?.title }))
+    .sort((a, b) => b.priority - a.priority);
 };
