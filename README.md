@@ -5,8 +5,9 @@ Tailwind, and Electron.
 
 ## Features
 
-- **⏱️ Smart Timer:** Custom goals, auto-stop, and distinct audio alarms
-  (Retro, Digital, Chime, Success).
+- **⏱️ Smart Timer:** Custom goals, auto-stop, and distinct audio alarms.
+- **📝 Tasks & Projects:** Plan your day with Action Items and organize
+  long-term goals with Projects (Complex Tasks).
 - **🏷️ Tag System:** Color-coded tags for tracking different types of
   work (Deep Work, Meetings, etc.).
 - **📊 Analytics:** Interactive visualizations (Histograms & Pie Charts)
@@ -16,7 +17,7 @@ Tailwind, and Electron.
 - **🔒 Private:** All data is stored locally on your device
   (localStorage / JSON). No cloud, no tracking.
 - **🖥️ Cross-Platform:** Runs as a Web App or a Native Desktop App
-  (Mac).
+  (Mac/Windows).
 
 ---
 
@@ -25,10 +26,16 @@ Tailwind, and Electron.
 We have included a script to handle everything for you.
 
 1. **Clone the repo**
-   git clone https://github.com/mathrulestheworld/focus-logger.git
+   ```bash
+   git clone [https://github.com/mathrulestheworld/focus-logger.git](https://github.com/mathrulestheworld/focus-logger.git)
    cd focus-logger
 
-2. **Run the Magic Script**
+2. Make the script exectable (One-time setup)
+   ```bash
+   chmod +x easy-start.sh
+
+3. **Run the Magic Script**
+   ```bash
    ./easy-start.sh
 
 3. **Choose your mode from the menu:**
@@ -53,6 +60,7 @@ If you prefer using standard npm commands without the script:
 
 - **src/App.jsx**: Main application logic (State, Audio Engine).
 - **src/components/Tracker.jsx**: Timer UI, Goal input, Tag selection.
+- **src/components/Tasks.jsx**: Task management (Kanban-lite), Project organization.
 - **src/components/History.jsx**: Analytics, Charts, Reports, Logs.
 - **src/components/Settings.jsx**: Config for defaults, sounds, colors.
 - **src/utils/storage.js**: LocalStorage persistence logic.
