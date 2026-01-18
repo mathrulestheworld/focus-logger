@@ -226,27 +226,45 @@ const History = ({ tagColors = {} }) => {
 
       {/* LIST */}
       <div className="flex-grow overflow-y-auto -mx-6 px-6 pb-4 space-y-3">
-        {filteredSessions.map((session) => (
-          <div key={session.id} className="bg-white border border-gray-100 p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow">
-            <div className="flex justify-between items-start">
-              <div className="overflow-hidden">
-                <div className="font-semibold text-slate-800 truncate">{session.taskName}</div>
-                <div className="flex items-center gap-2 mt-1 flex-wrap">
-                  <span className="text-xs px-2 py-0.5 rounded text-nowrap text-white font-bold" style={{ backgroundColor: tagColors[session.tag] || '#94a3b8' }}>{session.tag}</span>
-                  <span className="text-xs text-gray-400 flex items-center gap-1"><Calendar size={10} /> {format(new Date(session.timestamp), 'MMM d, h:mm a')}</span>
+        {filteredSessions.map((session) => {
+          // Check if this is a completion log (duration 0 means it was just checked off)
+          const isCompletionLog = session.duration === 0;
+
+          return (
+            <div 
+              key={session.id} 
+              className={`border p-4 rounded-xl shadow-sm hover:shadow-md transition-shadow ${
+                isCompletionLog 
+                  ? 'bg-green-50/50 border-green-200' 
+                  : 'bg-white border-gray-100'
+              }`}
+            >
+              <div className="flex justify-between items-start">
+                <div className="overflow-hidden">
+                  <div className={`font-semibold truncate ${isCompletionLog ? 'text-green-800' : 'text-slate-800'}`}>
+                    {session.taskName}
+                  </div>
+                  <div className="flex items-center gap-2 mt-1 flex-wrap">
+                    <span className="text-xs px-2 py-0.5 rounded text-nowrap text-white font-bold" style={{ backgroundColor: tagColors[session.tag] || '#94a3b8' }}>{session.tag}</span>
+                    <span className={`text-xs flex items-center gap-1 ${isCompletionLog ? 'text-green-600' : 'text-gray-400'}`}>
+                        <Calendar size={10} /> {format(new Date(session.timestamp), 'MMM d, h:mm a')}
+                    </span>
+                  </div>
+                  {session.note && <div className="mt-2 text-xs text-slate-500 bg-white/50 p-2 rounded italic">"{session.note}"</div>}
                 </div>
-                {session.note && <div className="mt-2 text-xs text-slate-500 bg-slate-50 p-2 rounded italic">"{session.note}"</div>}
-              </div>
-              <div className="text-right pl-2 flex flex-col items-end gap-2">
-                <div className="font-mono font-bold text-slate-900 text-sm">{formatDuration(session.duration)}</div>
-                <div className="flex gap-1">
-                   <button onClick={() => handleEditClick(session)} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"><Edit2 size={12} /></button>
-                   <button onClick={() => handleDelete(session.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"><Trash2 size={12} /></button>
+                <div className="text-right pl-2 flex flex-col items-end gap-2">
+                  <div className={`font-mono font-bold text-sm ${isCompletionLog ? 'text-green-700' : 'text-slate-900'}`}>
+                    {isCompletionLog ? 'COMPLETED' : formatDuration(session.duration)}
+                  </div>
+                  <div className="flex gap-1">
+                     <button onClick={() => handleEditClick(session)} className="p-1.5 text-gray-400 hover:text-blue-500 hover:bg-blue-50 rounded"><Edit2 size={12} /></button>
+                     <button onClick={() => handleDelete(session.id)} className="p-1.5 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded"><Trash2 size={12} /></button>
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       {/* REPORT MODAL */}

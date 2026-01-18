@@ -3,18 +3,10 @@ import { Play, Pause, Square, Plus, X, Clock } from 'lucide-react';
 
 // Helper to make faint background colors
 const hexToRgba = (hex, alpha) => {
-  if (!hex) return 'rgba(148, 163, 184, 0.1)'; // default gray
+  if (!hex) return 'rgba(148, 163, 184, 0.1)'; 
   let r = 0, g = 0, b = 0;
-  // Handle 3-digit hex
-  if (hex.length === 4) {
-    r = parseInt(hex[1] + hex[1], 16);
-    g = parseInt(hex[2] + hex[2], 16);
-    b = parseInt(hex[3] + hex[3], 16);
-  } else if (hex.length === 7) {
-    r = parseInt(hex.substring(1, 3), 16);
-    g = parseInt(hex.substring(3, 5), 16);
-    b = parseInt(hex.substring(5, 7), 16);
-  }
+  if (hex.length === 4) { r = parseInt(hex[1]+hex[1],16); g = parseInt(hex[2]+hex[2],16); b = parseInt(hex[3]+hex[3],16); } 
+  else if (hex.length === 7) { r = parseInt(hex.substring(1,3),16); g = parseInt(hex.substring(3,5),16); b = parseInt(hex.substring(5,7),16); }
   return `rgba(${r},${g},${b},${alpha})`;
 };
 
@@ -33,11 +25,8 @@ const Tracker = ({ state, actions, tagColors }) => {
   };
 
   const onAddTag = () => {
-    if (newTag.trim() && !tags.includes(newTag.trim())) {
-      handleTagOps.add(newTag.trim());
-    }
-    setNewTag('');
-    setIsAddingTag(false);
+    if (newTag.trim() && !tags.includes(newTag.trim())) { handleTagOps.add(newTag.trim()); }
+    setNewTag(''); setIsAddingTag(false);
   };
 
   const handleGoalChange = (e) => {
@@ -64,9 +53,8 @@ const Tracker = ({ state, actions, tagColors }) => {
       <div className="mb-6">
         <div className="flex flex-wrap gap-2">
           {tags.map((tag) => {
-            const baseColor = tagColors[tag] || '#0f172a'; // Default slate
+            const baseColor = tagColors[tag] || '#0f172a'; 
             const isActive = activeTag === tag;
-            
             return (
               <div
                 key={tag}
@@ -82,11 +70,7 @@ const Tracker = ({ state, actions, tagColors }) => {
                 {!isRunning && (
                   <button
                     onClick={(e) => { e.stopPropagation(); handleTagOps.delete(tag); }}
-                    className={`ml-2 p-0.5 rounded-full transition-colors ${
-                      isActive 
-                        ? 'text-white/70 hover:bg-white/20 hover:text-white' 
-                        : 'opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-500 text-gray-400'
-                    }`}
+                    className={`ml-2 p-0.5 rounded-full transition-colors ${isActive ? 'text-white/70 hover:bg-white/20 hover:text-white' : 'opacity-0 group-hover:opacity-100 hover:bg-red-100 hover:text-red-500 text-gray-400'}`}
                   >
                     <X size={10} />
                   </button>
@@ -96,19 +80,9 @@ const Tracker = ({ state, actions, tagColors }) => {
           })}
           {!isRunning && (
             isAddingTag ? (
-              <input
-                autoFocus
-                value={newTag}
-                onChange={(e) => setNewTag(e.target.value)}
-                onBlur={onAddTag}
-                onKeyDown={(e) => e.key === 'Enter' && onAddTag()}
-                className="px-3 py-1 rounded-full text-xs font-semibold border border-slate-900 outline-none w-24"
-              />
+              <input autoFocus value={newTag} onChange={(e) => setNewTag(e.target.value)} onBlur={onAddTag} onKeyDown={(e) => e.key === 'Enter' && onAddTag()} className="px-3 py-1 rounded-full text-xs font-semibold border border-slate-900 outline-none w-24" />
             ) : (
-              <button 
-                onClick={() => setIsAddingTag(true)}
-                className="px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-gray-300 text-gray-400 hover:text-slate-600 hover:border-slate-400 flex items-center gap-1"
-              >
+              <button onClick={() => setIsAddingTag(true)} className="px-3 py-1 rounded-full text-xs font-semibold border border-dashed border-gray-300 text-gray-400 hover:text-slate-600 hover:border-slate-400 flex items-center gap-1">
                 <Plus size={12} /> Add Tag
               </button>
             )
@@ -125,7 +99,9 @@ const Tracker = ({ state, actions, tagColors }) => {
         <div className="mt-8 flex items-center gap-3 text-sm text-gray-500 bg-white border border-gray-100 shadow-sm px-4 py-2 rounded-full">
            <Clock size={16} className="text-slate-400" />
            <span className="uppercase tracking-wide text-xs font-bold text-gray-400">Target:</span>
-           {seconds === 0 && !isRunning ? (
+           
+           {/* UPDATED: Only show Input if NOT running (allows edit on pause) */}
+           {!isRunning ? (
              <div className="flex items-center gap-1 relative">
                <input 
                  type="number" 
