@@ -13,12 +13,12 @@ Focus Logger helps you manage your time with smart timers, deep work tagging, an
 ## 📸 Gallery
 
 <p align="center">
-  <img src="./public/tracker.png" alt="Focus Logger Main Timer" width="800">
+  <img src="./public/tracker.png" alt="Focus Logger Main Timer" width="500">
 </p>
 
 | **Task Management** | **Analytics & History** | **Custom Settings** |
 |:---:|:---:|:---:|
-| <img src="./public/tasks.png" width="250"> | <img src="./public/analytics.png" width="250"> | <img src="./public/settings.png" width="250"> |
+| <img src="./public/tasks.png" width="180"> | <img src="./public/analytics.png" width="180"> | <img src="./public/settings.png" width="180"> |
 
 > **Note:** The images above are stored in the `public` directory of this repository.
 
